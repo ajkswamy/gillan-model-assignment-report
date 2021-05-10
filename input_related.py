@@ -27,6 +27,8 @@ def read_single_data_file(csv_file):
     trial_data_df["choice1"] = trial_data_df["choice1"].apply(lambda x: 0 if x == "left" else 1)
     trial_data_df["choice2"] = trial_data_df["choice2"].apply(lambda x: 0 if x == "left" else 1)
     trial_data_df["state2"] = trial_data_df["state2"].apply(lambda x: 0 if x == 2 else 1)
+    trial_data_df["subject_id"] = pl.Path(csv_file).stem
+    trial_data_df["trial_number"] = pd.to_numeric(trial_data_df["trial_number"])
 
     return trial_data_df
 
@@ -35,18 +37,36 @@ class InputManager(object):
 
     def __init__(self, data_folder):
 
-        data_folder_path = pl.Path(data_folder)
-        assert data_folder_path.is_dir(), f"Input data folder {data_folder} not found!"
+        self.data_folder_path = pl.Path(data_folder)
+        assert self.data_folder_path.is_dir(), f"Input data folder {data_folder} not found!"
 
-        self.input_files = [x for x in data_folder_path.iterdir() if x.suffix == ".csv"]
+        self.input_files = sorted([x for x in self.data_folder_path.iterdir() if x.suffix == ".csv"])
 
-    def get_iterator(self):
+    def get_iterator_all_csv(self):
 
         for csv in self.input_files:
 
             yield read_single_data_file(csv)
 
-    def get_random_sample(self):
+    def get_iterator_random_n_csv(self, n):
 
-        return read_single_data_file(random.sample(self.input_files, 1)[0])
+        for csv in random.sample(self.input_files, n):
 
+            yield read_single_data_file(csv)
+
+    def get_data(self, subsample=None):
+
+        if subsample is None:
+            csvs = self.input_files
+        else:
+            csvs = random.sample(self.input_files, subsample)
+
+        return pd.concat([read_single_data_file(csv) for csv in csvs], axis=0)
+
+    def get_data_top(self, n=1):
+
+        return pd.concat([read_single_data_file(csv) for csv in self.input_files[:n]], axis=0)
+
+    def get_op_folder(self):
+
+        return self.data_folder_path.parent / "Results"
