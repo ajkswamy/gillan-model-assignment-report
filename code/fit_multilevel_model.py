@@ -1,7 +1,7 @@
 import pymc3 as pm
 import arviz
 import numpy as np
-from code.input_related import InputManager
+from input_related import InputManager
 import sys
 import pandas as pd
 import datetime
