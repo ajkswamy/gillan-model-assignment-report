@@ -1,0 +1,10 @@
+name: gma
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.8
+  - pymc3
+  - pandas
+  - matplotlib
+  - seaborn
