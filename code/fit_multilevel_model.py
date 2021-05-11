@@ -20,12 +20,22 @@ def get_value_diff_0m1(q_arr):
     return q_arr[0] - q_arr[1]
 
 
-def fit_multilevel_model(data_df: pd.DataFrame, op_dir: pl.Path, n_trials=200):
+def fit_multilevel_model(data_df: pd.DataFrame, op_dir: pl.Path, n_trials: int = 200):
+    """
+    Constructs the model from Gillan et al. eLife 2016;5:e11305. DOI: 10.7554/eLife.11305, pg. 19-20 using implementational
+    details from the supplementary information of Otto et al. PNAS 2013; DOI: 10.1073/pnas.1312011110.
+    Runs MAP estimation and NUTS sampling. Results are written into <op_dir>. Output of NUTS sampling is stored
+    in a NetCDF file that can be read and analyzed using the package `arviz`
+    :param pandas.DataFrame data_df: Concatenation of DataFrames returned by input_related.read_single_data_file
+    :param pathlib.Path op_dir: path of output folder; must exist
+    :param int n_trials: number of trials to fit
+    :return: None
+    """
     unique_subjects = pd.unique(data_df["subject_id"])
     n_subjects = unique_subjects.shape[0]
     data_df.sort_values(by=["subject_id", "trial_number"], inplace=True)
 
-    print(f"Doing {n_subjects} subjects: {unique_subjects.tolist()}")
+    print(f"Using data of {n_subjects} subjects: {unique_subjects.tolist()}")
 
     with pm.Model() as multilevel_model:
 
@@ -125,10 +135,12 @@ if __name__ == '__main__':
 
     assert len(sys.argv) == 2, \
         f"Could not understand usage. Please use as:\n" \
-        f"python {__name__} <data_folder>"
+        f"python {__name__} <folder containing raw csvs>"
 
-    n_trials = 25
-    n_subjects = 15
+    n_trials = 20
+    n_subjects = 5
+
+    print(f"Using {n_trials} trials")
 
     input_manager = InputManager(data_folder=sys.argv[1])
     sample_df = input_manager.get_data_top(n_subjects)

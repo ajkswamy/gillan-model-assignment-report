@@ -1,7 +1,7 @@
-n_subjects,n_trials,"Runtime:
+"Config. Number",n_subjects,n_trials,"Runtime:
 Map Estimation (hh:mm:ss)","Sampling parameters:
 N_chains, n_cores, n_draws, n_tune","Runtime:
 NUTS sampling(hh:mm:ss)"
-2,20,00:07:04,"4, 4, 500, 250",00:04:58
-5,20,00:15:57,"4, 4, 1000, 500",00:23:23
-15,25,01:06:37,"4, 4, 2000, 1000",03:45:28
+1, 2,20,00:07:04,"4, 4, 500, 250",00:04:58
+2, 5,20,00:15:57,"4, 4, 1000, 500",00:23:23
+3, 15,25,01:06:37,"4, 4, 2000, 1000",03:45:28

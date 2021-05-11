@@ -7,7 +7,16 @@ from input_related import InputManager
 
 
 def write_summary_table(
-        map_estimate_file, sampling_estimate_file, subjects, output_filename_without_extension):
+        map_estimate_file: str, sampling_estimate_file: str,
+        subjects: list, output_filename_without_extension: str):
+    """
+    Reading results of MAP estimation and NUTS sampling and writes a summary table in CSV format.
+    :param pathlib.Path|str map_estimate_file: JSON file containing results of MAP estimation
+    :param pathlib.Path|str sampling_estimate_file: NetCDF(.NC) file containing results of NUTS sampling
+    :param list subjects: list of subject labels used when fitting
+    :param pathlib.Path|str output_filename_without_extension: output will be written to this path with .CSV extension
+    :return: None
+    """
 
     with open(map_estimate_file) as fp:
         map_estimates = json.load(fp)
@@ -84,7 +93,7 @@ if __name__ == '__main__':
 
     assert len(sys.argv) == 4, \
         f"Could not understand usage! Please use as\n" \
-        f"python {__file__} <raw data folder> <number of subjects> <number of trials>"
+        f"python {__file__} <folder containing raw csvs> <number of subjects> <number of trials>"
 
     ip_dir_path = pl.Path(sys.argv[1])
     n_subjects = sys.argv[2]
