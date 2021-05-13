@@ -1,0 +1,93 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[english]{babel}
+\usepackage{amsmath,amssymb,amsfonts,textcomp}
+\usepackage[default]{cantarell}
+\usepackage[T1]{fontenc}
+\usepackage{natbib}
+\usepackage{graphicx}
+\usepackage{float,flafter}
+\usepackage[utf8]{inputenc}
+\usepackage{sectsty}
+\setlength\paperwidth{20.999cm}\setlength\paperheight{29.699cm}\setlength\voffset{-1in}\setlength\hoffset{-1in}\setlength\topmargin{1.499cm}\setlength\headheight{12pt}\setlength\headsep{0cm}\setlength\footskip{1.131cm}\setlength\textheight{25cm}\setlength\oddsidemargin{2.499cm}\setlength\textwidth{15.999cm}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\hypersetup{
+  colorlinks=true,
+  citecolor=red,
+  urlcolor=blue
+}
+\bibliographystyle{apa-good}
+
+\renewcommand\seriesdefault{l}
+\renewcommand\mddefault{l}
+\renewcommand\bfdefault{m}
+\sectionfont{\fontfamily{Montserrat-LF}\selectfont}
+\subsectionfont{\itshape}
+
+
+\begin{document}
+\begin{center}
+\hrule
+\vspace{.4cm}
+\huge {\bf\fontfamily{Raleway-TLF}\selectfont Software Engineering Assignment Report}
+\vspace{.2cm}
+\end{center}
+\large {\bf Ajayrama Kumaraswamy}  (ajkumaraswamy@tutamail.com) \hfill \today\\
+\hrule
+
+\section*{Introduction}
+Recent advances in Computational Psychiatry allows the quantification of deficits in goal-directed control, where subjects tend to form rigid habits instead of flexibly adapting their decision-making towards intended goals. This deficit has been associated with obsessive-compulsive disorder and addiction. \cite{Daw2011} illustrated the quantification of goal-directed control using parameter fits of a reinforcement learning model to data from a novel multi-step decision task. \cite{Gillan2016} used this quantification paradigm to find an association between deficits in goal-directed control and a psychiatric symptom dimension comprising compulsive behavior and intrusive thought.
+
+The goal of the current assignment was to implement the model used by \cite{Gillan2016} and estimate model parameters based on data provided. This model has also been used in \cite{Otto2013} and \cite{Huys2011}, both of which provide more implementational details. Both studies use a two-level Bayesian Hierarchical model, where the data of each subject is modeled using different sets of parameters, which are in turn drawn from group-level distributions. \cite{Huys2011} estimate group-level distributions by pooling data across subjects, which are then used as priors for Maximum-A-Posteriori (MAP) estimation of individual parameters using an Expectation-Maximization (EM) approach. \cite{Otto2013} use a Markov Chain Monte Carlo (MCMC) method based on No-U-Turn Sampler (NUTS) to estimate posterior distributions of model parameters. 
+
+\section*{Methods}
+Python has a number of frameworks for building Bayesian Hierarchical models. PyMC3 \citep{Salvatier2016} was used for this assignment as it has excellent documentation and is rich in community resources like blogs and forums. PyMC3 provides both MAP as well as NUTS sampling methods for parameter estimation. While MAP method is faster, it could converge to a local maximum.  While MAP only provides a point estimate of model parameters, sampling methods provide estimations of parameter distributions, which could, for example, be used for quantifying their uncertainty. Both estimation methods were used in this assignment.
+
+Model hyperparameters and priors were taken from \cite{Otto2013} (see supplementary information), except for $\alpha$, which was parameterized as in Equation-group\ref{alphadef}. An exponential distribution is used for the shape parameter $\sigma_{\alpha}$ for its lighter tails, which can lead to better sampling. This was suggested by a tutorial of PyMC3 \citep{website:hpp}.
+\begin{subequations} 
+  \label{alphadef}
+  \begin{gather}
+    \alpha \sim \text{Beta}\{A, B\}\, \text{where}\\
+A=\mu_{\alpha}\sigma_{\alpha}\ \text{and}\ B=(1-\mu_{\alpha})\sigma_{\alpha}\, \text{where}\\
+\mu_{\alpha}\sim \text{Uniform}\{0, 1\}\ \text{and}\ \sigma_{\alpha}=\exp\{\sigma_{\alpha\_log}\},\ \text{where}\\
+\sigma_{\alpha\_log}\sim\text{Exponential}\{1.5\}
+\end{gather}
+\end{subequations}
+
+Models were fit on a laptop with a 4-core Intel i5 CPU and 16GiB of memory with three configurations as shown in \hyperref[Tables]{TableS1}.
+
+\section*{Results}
+\subsection*{Number of trials strongly affected memory demand}
+Parameter estimations using data from more than 25 trials failed as they ran out of memory even though data from only two subjects were used (data not shown). However, parameter estimation using data from 25 trials and 15 subjects was successful. This strongly indicated that the number of trials used had a stronger effect on memory consumption than the number of subjects used.
+
+
+\subsection*{Runtimes and convergence}
+Data from a larger number of trials and a larger number of subjects lead to longer run times for both MAP and sampling estimations (see \hyperref[Tables]{TableS1}). For sampling estimations, although drawing a larger number of samples led to much higher estimation run times, they achieved better convergence as quantified by the Gelman-Rubin diagnostic (see \hyperref[Tables]{TableS2-4}).
+
+\subsection*{MAP vs Sampling Estimates}
+MAP estimates were closer to initial estimates than NUTS sampling estimates (see \hyperref[Tables]{TableS4}). Choosing better initial estimates could result in better MAP estimates.
+\section*{Further Work}
+The model implementation presented can be deployed on a powerful computer with 128 or 256GB of RAM to estimate parameter distributions for all 250 subjects of the dataset and using all 200 trials.
+PyMC3 has an experimental yet highly promising implementation where both the model and the sampler are Just-in-time (JIT) compiled. This implementation can use available GPUs and TPUs as well and can lead to much faster parameter estimation \citep{website:jax}.
+
+\section*{An Interesting Parallel}
+A machine learning algorithm called Q-learning \citep{website:qlearn} is based on the reinforcement learning model used in this assignment. Given an environment that provides stochastic rewards to actions, an artificially intelligent agent can use Q-learning to select an optimal decision-making policy that maximizes the expected reward. Implementations of Q-learning using deep neural networks exist \citep{website:qlearn-deep}. It might be possible to use a two-level Q-learning algorithm to select the optimal decision-making policy for the task used in \cite{Gillan2016} and compare it with the policies used by test subjects.
+
+Another machine learning approach related to the reinforcement learning model used in this assignment is the problem of hyperparameter selection for offline reinforcement learning \citep{hyperselect}. Given a dataset of actions performed by an agent and associated rewards provided by an environment, this approach aims to first train a set of policies using different sets of hyperparameters using only the dataset provided and not interacting further with the environment, and then select the best among these policies. This approach is similar to the model-fitting approach of this assignment, where the task is to identify the best set of hyperparameters with which the reinforcement learning model produces the set of actions selected by test subjects given stimuli and rewards. The arguments and discussions in \cite{hyperselect} can help in evaluating the model fits of the reinforcement learning model of this assignment as well as draw parallels and device new methods for parameter fitting.
+\section*{Supplementary Files}
+All supplementary files are available on GitHub at \\{\url{https://github.com/ajkswamy/gillan-model-assignment-report.git}.}
+\subsection*{Code}
+Python code used in this assignment is available in the folder `code' of the repository. Usage instructions are available in the file \href{https://github.com/ajkswamy/gillan-model-assignment-report/blob/master/Readme.md}{\ttfamily Readme.md}.
+\subsection*{Tables}
+Please note that the CSV files mentioned below are best visualized in a spreadsheet program such as Microsoft Excel or LibreOffice Calc. Sorting rows based on different columns can help compare estimates of a parameter across subjects or estimates of all parameters for a subject.
+\begin{enumerate}
+  \label{Tables}
+  \item \textbf{TableS1:} Details of the configurations used for model fitting. See \newline\href{https://github.com/ajkswamy/gillan-model-assignment-report/blob/master/Results/test_configurations_runtimes.csv}{\ttfamily test\_configurations\_runtimes.csv} in the folder `Results'.
+  \item \textbf{TableS2:} Summary of estimation results using configuration 1. See \newline\href{https://github.com/ajkswamy/gillan-model-assignment-report/blob/master/Results/summary_multilevel_2subjects_20trials.csv}{\ttfamily summary\_multilevel\_2subjects\_20trials.csv} in the folder `Results'.
+  \item \textbf{TableS3:} Summary of estimation results using configuration 2. See \newline\href{https://github.com/ajkswamy/gillan-model-assignment-report/blob/master/Results/summary_multilevel_5subjects_20trials.csv}{\ttfamily summary\_multilevel\_5subjects\_20trials.csv} in the folder `Results'.
+  \item \textbf{TableS4:} Summary of estimation results using configuration 3. See \newline\href{https://github.com/ajkswamy/gillan-model-assignment-report/blob/master/Results/summary_multilevel_15subjects_25trials.csv}{\ttfamily summary\_multilevel\_15subjects\_25trials.csv} in the folder `Results'. 
+\end{enumerate}
+
+\bibliography{mybib}
+
+\end{document}

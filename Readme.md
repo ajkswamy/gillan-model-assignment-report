@@ -19,7 +19,8 @@ Output
 ---
 Outputs are written in a folder that is a sibling of the folder containing input CSVs and named "Results". 
 Map estimates are written in text-based JSON format. Results of NUTS sampling are written in NetCDF format which can 
-be read and analyzed using the package `arviz` 
+be read and analyzed using the package `arviz`. See the file `code/create_summary_table.py` for an example where
+both kinds of output files were loaded to create a summary table
 
 
 
